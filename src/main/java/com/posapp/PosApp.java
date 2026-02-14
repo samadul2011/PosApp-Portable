@@ -1,0 +1,193 @@
+package com.posapp;
+
+import javafx.application.Application;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.stage.Stage;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+
+/**
+ * PosApp - Portable Point of Sale Application
+ * A simple, portable POS system that runs with bundled Java Runtime
+ */
+public class PosApp extends Application {
+
+    private double cartTotal = 0.0;
+    private Label totalLabel;
+    private ListView<String> cartList;
+
+    @Override
+    public void start(Stage primaryStage) {
+        primaryStage.setTitle("PosApp - Portable Point of Sale System");
+
+        // Create main layout
+        BorderPane mainLayout = new BorderPane();
+        mainLayout.setPadding(new Insets(15));
+
+        // Header
+        Label headerLabel = new Label("Point of Sale System");
+        headerLabel.setFont(Font.font("System", FontWeight.BOLD, 24));
+        HBox headerBox = new HBox(headerLabel);
+        headerBox.setAlignment(Pos.CENTER);
+        headerBox.setPadding(new Insets(0, 0, 20, 0));
+        mainLayout.setTop(headerBox);
+
+        // Center content - Product list and cart
+        GridPane centerGrid = new GridPane();
+        centerGrid.setHgap(10);
+        centerGrid.setVgap(10);
+        centerGrid.setPadding(new Insets(10));
+
+        // Products section
+        Label productsLabel = new Label("Products");
+        productsLabel.setFont(Font.font("System", FontWeight.BOLD, 16));
+        centerGrid.add(productsLabel, 0, 0);
+
+        ListView<String> productList = new ListView<>();
+        productList.getItems().addAll(
+            "Apple - $1.50",
+            "Banana - $0.75",
+            "Orange - $1.25",
+            "Bread - $2.50",
+            "Milk - $3.00",
+            "Eggs - $4.50",
+            "Coffee - $8.99",
+            "Tea - $5.99"
+        );
+        productList.setPrefHeight(300);
+        centerGrid.add(productList, 0, 1);
+
+        // Cart section
+        Label cartLabel = new Label("Shopping Cart");
+        cartLabel.setFont(Font.font("System", FontWeight.BOLD, 16));
+        centerGrid.add(cartLabel, 1, 0);
+
+        cartList = new ListView<>();
+        cartList.setPrefHeight(300);
+        centerGrid.add(cartList, 1, 1);
+
+        // Buttons
+        VBox buttonBox = new VBox(10);
+        Button addButton = new Button("Add to Cart");
+        Button removeButton = new Button("Remove from Cart");
+        Button clearButton = new Button("Clear Cart");
+        
+        addButton.setMaxWidth(Double.MAX_VALUE);
+        removeButton.setMaxWidth(Double.MAX_VALUE);
+        clearButton.setMaxWidth(Double.MAX_VALUE);
+        
+        buttonBox.getChildren().addAll(addButton, removeButton, clearButton);
+        centerGrid.add(buttonBox, 2, 1);
+
+        mainLayout.setCenter(centerGrid);
+
+        // Bottom - Total and checkout
+        HBox bottomBox = new HBox(15);
+        bottomBox.setAlignment(Pos.CENTER_RIGHT);
+        bottomBox.setPadding(new Insets(20, 0, 0, 0));
+
+        totalLabel = new Label("Total: $0.00");
+        totalLabel.setFont(Font.font("System", FontWeight.BOLD, 18));
+        
+        Button checkoutButton = new Button("Checkout");
+        checkoutButton.setFont(Font.font("System", FontWeight.BOLD, 14));
+        checkoutButton.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
+        
+        bottomBox.getChildren().addAll(totalLabel, checkoutButton);
+        mainLayout.setBottom(bottomBox);
+
+        // Event handlers
+        addButton.setOnAction(e -> handleAddToCart(productList));
+        removeButton.setOnAction(e -> handleRemoveFromCart());
+        clearButton.setOnAction(e -> handleClearCart());
+        checkoutButton.setOnAction(e -> handleCheckout());
+
+        // Create scene and show
+        Scene scene = new Scene(mainLayout, 900, 500);
+        primaryStage.setScene(scene);
+        primaryStage.show();
+
+        // Show welcome message
+        showAlert("Welcome to PosApp", 
+            "Portable Point of Sale System\nVersion 1.0.0\n\n✅ No Java installation required\n✅ Runs from any location");
+    }
+
+    private void handleAddToCart(ListView<String> productList) {
+        String selected = productList.getSelectionModel().getSelectedItem();
+        if (selected != null) {
+            cartList.getItems().add(selected);
+            double price = extractPrice(selected);
+            if (price >= 0) {
+                cartTotal += price;
+                updateTotalLabel();
+            }
+        }
+    }
+
+    private void handleRemoveFromCart() {
+        String selected = cartList.getSelectionModel().getSelectedItem();
+        if (selected != null) {
+            cartList.getItems().remove(selected);
+            double price = extractPrice(selected);
+            if (price >= 0) {
+                cartTotal -= price;
+                updateTotalLabel();
+            }
+        }
+    }
+
+    private void handleClearCart() {
+        cartList.getItems().clear();
+        cartTotal = 0.0;
+        updateTotalLabel();
+    }
+
+    private void handleCheckout() {
+        if (cartList.getItems().isEmpty()) {
+            showAlert("Cart is empty", "Please add items to cart before checkout.");
+        } else {
+            showAlert("Checkout Complete", 
+                String.format("Total amount: $%.2f\nThank you for your purchase!", cartTotal));
+            handleClearCart();
+        }
+    }
+
+    private void updateTotalLabel() {
+        totalLabel.setText(String.format("Total: $%.2f", cartTotal));
+    }
+
+    /**
+     * Extracts price from a product string in format "Product Name - $X.XX"
+     * @param productString The product string containing the price
+     * @return The extracted price, or -1.0 if parsing fails
+     */
+    private double extractPrice(String productString) {
+        try {
+            int dollarIndex = productString.indexOf("$");
+            if (dollarIndex == -1) {
+                return -1.0;
+            }
+            String priceStr = productString.substring(dollarIndex + 1).trim();
+            return Double.parseDouble(priceStr);
+        } catch (NumberFormatException | IndexOutOfBoundsException e) {
+            System.err.println("Error parsing price from: " + productString);
+            return -1.0;
+        }
+    }
+
+    private void showAlert(String title, String content) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+}
