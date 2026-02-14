@@ -16,6 +16,10 @@ import javafx.scene.text.FontWeight;
  */
 public class PosApp extends Application {
 
+    private double cartTotal = 0.0;
+    private Label totalLabel;
+    private ListView<String> cartList;
+
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("PosApp - Portable Point of Sale System");
@@ -62,7 +66,7 @@ public class PosApp extends Application {
         cartLabel.setFont(Font.font("System", FontWeight.BOLD, 16));
         centerGrid.add(cartLabel, 1, 0);
 
-        ListView<String> cartList = new ListView<>();
+        cartList = new ListView<>();
         cartList.setPrefHeight(300);
         centerGrid.add(cartList, 1, 1);
 
@@ -86,7 +90,7 @@ public class PosApp extends Application {
         bottomBox.setAlignment(Pos.CENTER_RIGHT);
         bottomBox.setPadding(new Insets(20, 0, 0, 0));
 
-        Label totalLabel = new Label("Total: $0.00");
+        totalLabel = new Label("Total: $0.00");
         totalLabel.setFont(Font.font("System", FontWeight.BOLD, 18));
         
         Button checkoutButton = new Button("Checkout");
@@ -97,49 +101,10 @@ public class PosApp extends Application {
         mainLayout.setBottom(bottomBox);
 
         // Event handlers
-        final double[] total = {0.0};
-        
-        addButton.setOnAction(e -> {
-            String selected = productList.getSelectionModel().getSelectedItem();
-            if (selected != null) {
-                cartList.getItems().add(selected);
-                // Extract price and add to total
-                String priceStr = selected.substring(selected.indexOf("$") + 1);
-                double price = Double.parseDouble(priceStr);
-                total[0] += price;
-                totalLabel.setText(String.format("Total: $%.2f", total[0]));
-            }
-        });
-
-        removeButton.setOnAction(e -> {
-            String selected = cartList.getSelectionModel().getSelectedItem();
-            if (selected != null) {
-                cartList.getItems().remove(selected);
-                // Extract price and subtract from total
-                String priceStr = selected.substring(selected.indexOf("$") + 1);
-                double price = Double.parseDouble(priceStr);
-                total[0] -= price;
-                totalLabel.setText(String.format("Total: $%.2f", total[0]));
-            }
-        });
-
-        clearButton.setOnAction(e -> {
-            cartList.getItems().clear();
-            total[0] = 0.0;
-            totalLabel.setText("Total: $0.00");
-        });
-
-        checkoutButton.setOnAction(e -> {
-            if (cartList.getItems().isEmpty()) {
-                showAlert("Cart is empty", "Please add items to cart before checkout.");
-            } else {
-                showAlert("Checkout Complete", 
-                    String.format("Total amount: $%.2f\nThank you for your purchase!", total[0]));
-                cartList.getItems().clear();
-                total[0] = 0.0;
-                totalLabel.setText("Total: $0.00");
-            }
-        });
+        addButton.setOnAction(e -> handleAddToCart(productList));
+        removeButton.setOnAction(e -> handleRemoveFromCart());
+        clearButton.setOnAction(e -> handleClearCart());
+        checkoutButton.setOnAction(e -> handleCheckout());
 
         // Create scene and show
         Scene scene = new Scene(mainLayout, 900, 500);
@@ -149,6 +114,50 @@ public class PosApp extends Application {
         // Show welcome message
         showAlert("Welcome to PosApp", 
             "Portable Point of Sale System\nVersion 1.0.0\n\n✅ No Java installation required\n✅ Runs from any location");
+    }
+
+    private void handleAddToCart(ListView<String> productList) {
+        String selected = productList.getSelectionModel().getSelectedItem();
+        if (selected != null) {
+            cartList.getItems().add(selected);
+            // Extract price and add to total
+            String priceStr = selected.substring(selected.indexOf("$") + 1);
+            double price = Double.parseDouble(priceStr);
+            cartTotal += price;
+            updateTotalLabel();
+        }
+    }
+
+    private void handleRemoveFromCart() {
+        String selected = cartList.getSelectionModel().getSelectedItem();
+        if (selected != null) {
+            cartList.getItems().remove(selected);
+            // Extract price and subtract from total
+            String priceStr = selected.substring(selected.indexOf("$") + 1);
+            double price = Double.parseDouble(priceStr);
+            cartTotal -= price;
+            updateTotalLabel();
+        }
+    }
+
+    private void handleClearCart() {
+        cartList.getItems().clear();
+        cartTotal = 0.0;
+        updateTotalLabel();
+    }
+
+    private void handleCheckout() {
+        if (cartList.getItems().isEmpty()) {
+            showAlert("Cart is empty", "Please add items to cart before checkout.");
+        } else {
+            showAlert("Checkout Complete", 
+                String.format("Total amount: $%.2f\nThank you for your purchase!", cartTotal));
+            handleClearCart();
+        }
+    }
+
+    private void updateTotalLabel() {
+        totalLabel.setText(String.format("Total: $%.2f", cartTotal));
     }
 
     private void showAlert(String title, String content) {
