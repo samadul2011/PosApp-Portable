@@ -49,7 +49,7 @@ echo @echo off
 echo REM PosApp Launcher Script
 echo REM This script launches PosApp using the bundled Java Runtime
 echo.
-echo setlocal
+echo setlocal enabledelayedexpansion
 echo.
 echo REM Get the directory where this script is located
 echo set "APP_DIR=%%~dp0"

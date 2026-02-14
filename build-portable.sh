@@ -56,7 +56,7 @@ cat > "$PACKAGE_DIR/PosApp.bat" << 'EOF'
 REM PosApp Launcher Script
 REM This script launches PosApp using the bundled Java Runtime
 
-setlocal
+setlocal enabledelayedexpansion
 
 REM Get the directory where this script is located
 set "APP_DIR=%~dp0"

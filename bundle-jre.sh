@@ -10,7 +10,6 @@ echo "========================================"
 echo ""
 
 # Configuration
-JRE_VERSION="17.0.10+7"
 JRE_URL="https://api.adoptium.net/v3/binary/latest/17/ga/windows/x64/jre/hotspot/normal/eclipse"
 PACKAGE_DIR="./target/package"
 JRE_DIR="$PACKAGE_DIR/jre"

@@ -120,11 +120,11 @@ public class PosApp extends Application {
         String selected = productList.getSelectionModel().getSelectedItem();
         if (selected != null) {
             cartList.getItems().add(selected);
-            // Extract price and add to total
-            String priceStr = selected.substring(selected.indexOf("$") + 1);
-            double price = Double.parseDouble(priceStr);
-            cartTotal += price;
-            updateTotalLabel();
+            double price = extractPrice(selected);
+            if (price >= 0) {
+                cartTotal += price;
+                updateTotalLabel();
+            }
         }
     }
 
@@ -132,11 +132,11 @@ public class PosApp extends Application {
         String selected = cartList.getSelectionModel().getSelectedItem();
         if (selected != null) {
             cartList.getItems().remove(selected);
-            // Extract price and subtract from total
-            String priceStr = selected.substring(selected.indexOf("$") + 1);
-            double price = Double.parseDouble(priceStr);
-            cartTotal -= price;
-            updateTotalLabel();
+            double price = extractPrice(selected);
+            if (price >= 0) {
+                cartTotal -= price;
+                updateTotalLabel();
+            }
         }
     }
 
@@ -158,6 +158,25 @@ public class PosApp extends Application {
 
     private void updateTotalLabel() {
         totalLabel.setText(String.format("Total: $%.2f", cartTotal));
+    }
+
+    /**
+     * Extracts price from a product string in format "Product Name - $X.XX"
+     * @param productString The product string containing the price
+     * @return The extracted price, or -1.0 if parsing fails
+     */
+    private double extractPrice(String productString) {
+        try {
+            int dollarIndex = productString.indexOf("$");
+            if (dollarIndex == -1) {
+                return -1.0;
+            }
+            String priceStr = productString.substring(dollarIndex + 1).trim();
+            return Double.parseDouble(priceStr);
+        } catch (NumberFormatException | IndexOutOfBoundsException e) {
+            System.err.println("Error parsing price from: " + productString);
+            return -1.0;
+        }
     }
 
     private void showAlert(String title, String content) {
